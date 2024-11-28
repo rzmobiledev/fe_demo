@@ -2,7 +2,8 @@ import { useRef, useEffect, useState } from 'react'
 import axios from '../api/axios'
 import useAuth from '../hooks/useAuth'
 import { useNavigate, useLocation } from 'react-router-dom'
-import useLocalStorage from '../hooks/useLocalStorage'
+import useInput from '../hooks/useInput'
+import useToggle from '../hooks/useToggle'
 
 const LOGIN_URL = '/auth'
 
@@ -11,14 +12,15 @@ export default function Login() {
   const location = useLocation()
   const from = location.state?.from?.pathname || '/'
 
-  const { setAuth, persist, setPersist } = useAuth()
+  const { setAuth } = useAuth()
   const userRef = useRef()
   const errRef = useRef()
 
   // const [user, setUser] = useState('')
-  const [user, setUser] = useLocalStorage('user', '')
+  const [user, resetUser, userAttribs] = useInput('user', '')
   const [pwd, setPwd] = useState('')
   const [errMsg, setErrMsg] = useState('')
+  const [check, toggleCheck] = useToggle('persist', false)
 
   useEffect(() => {
     userRef.current.focus()
@@ -46,7 +48,7 @@ export default function Login() {
       const accessToken = response?.data?.accessToken
       const roles = response?.data?.roles
       setAuth({ user, roles, accessToken })
-      setUser('')
+      resetUser('')
       setPwd('')
       navigate(from, { replace: true })
     } catch (err) {
@@ -59,13 +61,13 @@ export default function Login() {
     }
   }
 
-  const togglePersist = () => {
-    setPersist((prev) => !prev)
-  }
+  // const togglePersist = () => {
+  //   setPersist((prev) => !prev)
+  // }
 
-  useEffect(() => {
-    localStorage.setItem('persist', persist)
-  }, [persist])
+  // useEffect(() => {
+  //   localStorage.setItem('persist', persist)
+  // }, [persist])
 
   return (
     <section>
@@ -85,8 +87,7 @@ export default function Login() {
           id="username"
           ref={userRef}
           autoComplete="off"
-          onChange={(e) => setUser(e.target.value)}
-          value={user}
+          {...userAttribs}
           required
         />
 
@@ -104,8 +105,8 @@ export default function Login() {
           <input
             type="checkbox"
             id="persist"
-            onChange={togglePersist}
-            checked={persist}
+            onChange={toggleCheck}
+            checked={check}
           />
           <label htmlFor="persist">Trust this device</label>
         </div>
